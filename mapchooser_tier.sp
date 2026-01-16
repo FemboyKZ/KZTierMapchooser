@@ -245,6 +245,7 @@ public int OnMapInfo(Handle request, bool failure, bool requestSuccessful, EHTTP
 	}
 
 	delete request;
+	return 0;
 }
 
 public int OnMapInfo_Data(const char[] data)
@@ -288,6 +289,7 @@ public int OnMapInfo_Data(const char[] data)
 
 	delete jsonData;
 	delete jsonData2;
+	return 0;
 }
 
 /* ********************************************************************************* */
