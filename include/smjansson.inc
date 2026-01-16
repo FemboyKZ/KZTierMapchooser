@@ -10,8 +10,8 @@
  * The JSON specification (RFC 4627) defines the following data types:
  * object, array, string, number, boolean, and null.
  * JSON types are used dynamically; arrays and objects can hold any
- * other data type, including themselves. For this reason, Jansson�s
- * type system is also dynamic in nature. There�s one Handle type to
+ * other data type, including themselves. For this reason, Jansson's
+ * type system is also dynamic in nature. There's one Handle type to
  * represent all JSON values, and the referenced structure knows the
  * type of the JSON value it holds.
  *
@@ -283,13 +283,13 @@ native bool json_object_update_missing(Handle hObj, Handle hOther);
  *  - We assume hObj is a Handle to a valid JSON object.
  *
  *
- * Handle hIterator = json_object_iter(hObj);
+ * new Handle hIterator = json_object_iter(hObj);
  * while(hIterator != INVALID_HANDLE)
  * {
- *     	char[128] sKey;
+ *     	new String:sKey[128];
  *      json_object_iter_key(hIterator, sKey, sizeof(sKey));
  *
- *      Handle hValue = json_object_iter_value(hIterator);
+ *      new Handle hValue = json_object_iter_value(hIterator);
  *
  *      // Do something with sKey and hValue
  *
@@ -353,7 +353,7 @@ native Handle json_object_iter_next(Handle hObj, Handle hIter);
  * @error                   Invalid JSON Object Iterator.
  * @return                  Length of the returned string or -1 on error.
  */
-native int json_object_iter_key(Handle hIter, const char[] sKeyBuffer, int maxlength);
+native int json_object_iter_key(Handle hIter, char[] sKeyBuffer, int maxlength);
 
 /**
  * Returns a handle to the value hIter is pointing at.
@@ -577,7 +577,7 @@ native Handle json_null();
  * Strings
  *
  * Jansson uses UTF-8 as the character encoding. All JSON strings must
- * be valid UTF-8 (or ASCII, as it�s a subset of UTF-8). Normal null
+ * be valid UTF-8 (or ASCII, as it's a subset of UTF-8). Normal null
  * terminated C strings are used, so JSON strings may not contain
  * embedded null characters.
  *
@@ -590,7 +590,7 @@ native Handle json_null();
  *							Must be a valid UTF-8 encoded Unicode string.
  * @return                  Handle to the new String object
  */
-native Handle json_string(const char [] sValue);
+native Handle json_string(const char[] sValue);
 
 /**
  * Saves the associated value of hString as a null terminated UTF-8
@@ -751,7 +751,7 @@ native Handle json_load_ex(const char[] sJSON, char[] sErrorText, int maxlen, in
  * @return                  Handle to JSON object or array.
  *                          or INVALID_HANDLE on error.
  */
-native Handle json_load_file(const char[] sFilePath);
+native Handle json_load_file(const char sFilePath[PLATFORM_MAX_PATH]);
 
 /**
  * Decodes the JSON text in file sFilePath and returns the array or object
@@ -769,7 +769,7 @@ native Handle json_load_file(const char[] sFilePath);
  * @return                  Handle to JSON object or array.
  *                          or INVALID_HANDLE on error.
  */
-native Handle json_load_file_ex(const char[] sFilePath, char[] sErrorText, int maxlen, int &iLine, int &iColumn);
+native Handle json_load_file_ex(const char sFilePath[PLATFORM_MAX_PATH], char[] sErrorText, int maxlen, int &iLine, int &iColumn);
 
 
 
@@ -849,8 +849,8 @@ native bool json_dump_file(Handle hObject, const char[] sFilePath, int iIndentWi
  * @param ...			    Variable number of format parameters.
  * @return                  Handle to the new String object
  */
-stock Handle json_string_format(const char[] sFormat, any:...) {
-	char[4096] sTmp;
+stock Handle json_string_format(const char[] sFormat, any ...) {
+	char sTmp[4096];
 	VFormat(sTmp, sizeof(sTmp), sFormat, 2);
 
 	return json_string(sTmp);
@@ -869,9 +869,9 @@ stock Handle json_string_format(const char[] sFormat, any:...) {
  * @param ...			    Variable number of format parameters.
  * @return                  Handle to the new String object
  */
-stock Handle json_string_format_ex(int tmpBufferLength, const char[] sFormat, any:...) {
-	char[tmpBufferLength] sTmp;
-	VFormat(sTmp, sizeof(sTmp), sFormat, 3);
+stock Handle json_string_format_ex(int tmpBufferLength, const char[] sFormat, any ...) {
+	char[] sTmp = new char[tmpBufferLength];
+	VFormat(sTmp, tmpBufferLength, sFormat, 3);
 
 	return json_string(sTmp);
 }
@@ -891,7 +891,7 @@ stock bool json_array_get_bool(Handle hArray, int iIndex) {
 
 	bool bResult = (json_is_true(hElement) ? true : false);
 
-	CloseHandle(hElement);
+	delete hElement;
 	return bResult;
 }
 
@@ -909,7 +909,7 @@ stock float json_array_get_float(Handle hArray, int iIndex) {
 
 	float fResult = (json_is_number(hElement) ? json_number_value(hElement) : 0.0);
 
-	CloseHandle(hElement);
+	delete hElement;
 	return fResult;
 }
 
@@ -927,7 +927,7 @@ stock int json_array_get_int(Handle hArray, int iIndex) {
 
 	int iResult = (json_is_integer(hElement) ? json_integer_value(hElement) : 0);
 
-	CloseHandle(hElement);
+	delete hElement;
 	return iResult;
 }
 
@@ -950,7 +950,7 @@ stock int json_array_get_string(Handle hArray, int iIndex, char[] sBuffer, int m
 	if(json_is_string(hElement)) {
 		iResult = json_string_value(hElement, sBuffer, maxlength);
 	}
-	CloseHandle(hElement);
+	delete hElement;
 
 	return iResult;
 }
@@ -964,12 +964,12 @@ stock int json_array_get_string(Handle hArray, int iIndex, char[] sBuffer, int m
  * @return                  True if it's a boolean and TRUE,
  *                          false otherwise.
  */
-stock bool json_object_get_bool(Handle hObj, char[] sKey) {
+stock bool json_object_get_bool(Handle hObj, const char[] sKey) {
 	Handle hElement = json_object_get(hObj, sKey);
 
-	bool bResult = (json_is_true(hElement) ? true : false);
+	bool bResult = json_is_true(hElement);
 
-	CloseHandle(hElement);
+	delete hElement;
 	return bResult;
 }
 
@@ -982,12 +982,12 @@ stock bool json_object_get_bool(Handle hObj, char[] sKey) {
  * @return                  Float value,
  *                          or 0.0 if element is not a JSON Real.
  */
-stock float json_object_get_float(Handle hObj, char[] sKey) {
+stock float json_object_get_float(Handle hObj, const char[] sKey) {
 	Handle hElement = json_object_get(hObj, sKey);
 
 	float fResult = (json_is_number(hElement) ? json_number_value(hElement) : 0.0);
 
-	CloseHandle(hElement);
+	delete hElement;
 	return fResult;
 }
 
@@ -1000,12 +1000,12 @@ stock float json_object_get_float(Handle hObj, char[] sKey) {
  * @return                  Integer value,
  *                          or 0 if element is not a JSON Integer.
  */
-stock int json_object_get_int(Handle hObj, char[] sKey) {
+stock int json_object_get_int(Handle hObj, const char[] sKey) {
 	Handle hElement = json_object_get(hObj, sKey);
 
 	int iResult = (json_is_integer(hElement) ? json_integer_value(hElement) : 0);
 
-	CloseHandle(hElement);
+	delete hElement;
 	return iResult;
 }
 
@@ -1021,14 +1021,14 @@ stock int json_object_get_int(Handle hObj, char[] sKey) {
  * @error                   Element is not a JSON String.
  * @return                  Length of the returned string or -1 on error.
  */
-stock int json_object_get_string(Handle hObj, char[] sKey, char[] sBuffer, int maxlength) {
+stock int json_object_get_string(Handle hObj, const char[] sKey, char[] sBuffer, int maxlength) {
 	Handle hElement = json_object_get(hObj, sKey);
 
 	int iResult = -1;
 	if(json_is_string(hElement)) {
 		iResult = json_string_value(hElement, sBuffer, maxlength);
 	}
-	CloseHandle(hElement);
+	delete hElement;
 
 	return iResult;
 }
@@ -1038,7 +1038,7 @@ stock int json_object_get_string(Handle hObj, char[] sKey, char[] sBuffer, int m
 /**
  * Pack String Rules
  *
- * Here�s the full list of format characters:
+ * Here's the full list of format characters:
  *  n    Output a JSON null value. No argument is consumed.
  *  s    Output a JSON string, consuming one argument.
  *  b    Output a JSON bool value, consuming one argument.
@@ -1072,7 +1072,7 @@ stock int json_object_get_string(Handle hObj, char[] sKey, char[] sBuffer, int m
  *                          or size.
  * @return                  Handle to JSON element.
  */
-stock Handle json_pack(const char[] sPackString, Handle hParams) {
+stock Handle json_pack(const char[] sPackString, ArrayList hParams) {
 	int iPos = 0;
 	return json_pack_element_(sPackString, iPos, hParams);
 }
@@ -1085,11 +1085,11 @@ stock Handle json_pack(const char[] sPackString, Handle hParams) {
 * Internal stocks used by json_pack(). Don't use these directly!
 *
 */
-stock Handle json_pack_array_(const char[] sFormat, int &iPos, Handle hParams) {
+stock Handle json_pack_array_(const char[] sFormat, int &iPos, ArrayList hParams) {
 	Handle hObj = json_array();
 	int iStrLen = strlen(sFormat);
 	for(; iPos < iStrLen;) {
-		char this_char = sFormat[iPos];
+		int this_char = sFormat[iPos];
 
 		if(this_char == 32 || this_char == 58 || this_char == 44) {
 			// Skip whitespace, ',' and ':'
@@ -1114,11 +1114,11 @@ stock Handle json_pack_array_(const char[] sFormat, int &iPos, Handle hParams) {
 	return hObj;
 }
 
-stock Handle json_pack_object_(const char[] sFormat, int &iPos, Handle hParams) {
+stock Handle json_pack_object_(const char[] sFormat, int &iPos, ArrayList hParams) {
 	Handle hObj = json_object();
 	int iStrLen = strlen(sFormat);
 	for(; iPos < iStrLen;) {
-		char this_char = sFormat[iPos];
+		int this_char = sFormat[iPos];
 
 		if(this_char == 32 || this_char == 58 || this_char == 44) {
 			// Skip whitespace, ',' and ':'
@@ -1139,9 +1139,9 @@ stock Handle json_pack_object_(const char[] sFormat, int &iPos, Handle hParams) 
 
 		// Get the key string for this object from
 		// the hParams array.
-		decl char[255] sKey;
-		GetArrayString(hParams, 0, sKey, sizeof(sKey));
-		RemoveFromArray(hParams, 0);
+		char sKey[255];
+		hParams.GetString(0, sKey, sizeof(sKey));
+		hParams.Erase(0);
 
 		// Advance one character in the pack string,
 		// because we've just read the Key string for
@@ -1159,8 +1159,8 @@ stock Handle json_pack_object_(const char[] sFormat, int &iPos, Handle hParams) 
 	return hObj;
 }
 
-stock Handle json_pack_element_(const char[] sFormat, int &iPos, Handle hParams) {
-	char this_char = sFormat[iPos];
+stock Handle json_pack_element_(const char[] sFormat, int &iPos, ArrayList hParams) {
+	int this_char = sFormat[iPos];
 	while(this_char == 32 || this_char == 58 || this_char == 44) {
 		iPos++;
 		this_char = sFormat[iPos];
@@ -1183,16 +1183,16 @@ stock Handle json_pack_element_(const char[] sFormat, int &iPos, Handle hParams)
 
 		case 98: {
 			// b  --> Boolean
-			int iValue = GetArrayCell(hParams, 0);
-			RemoveFromArray(hParams, 0);
+			int iValue = hParams.Get(0);
+			hParams.Erase(0);
 
-			return json_boolean(bool iValue);
+			return json_boolean(view_as<bool>(iValue));
 		}
 
 		case 102, 114: {
 			// r,f  --> Real (Float)
-			float iValue = GetArrayCell(hParams, 0);
-			RemoveFromArray(hParams, 0);
+			float iValue = hParams.Get(0);
+			hParams.Erase(0);
 
 			return json_real(iValue);
 		}
@@ -1204,17 +1204,17 @@ stock Handle json_pack_element_(const char[] sFormat, int &iPos, Handle hParams)
 
 		case 115: {
 			// s  --> String
-			decl char[255] sKey;
-			GetArrayString(hParams, 0, sKey, sizeof(sKey));
-			RemoveFromArray(hParams, 0);
+			char sKey[255];
+			hParams.GetString(0, sKey, sizeof(sKey));
+			hParams.Erase(0);
 
 			return json_string(sKey);
 		}
 
 		case 105: {
 			// i  --> Integer
-			int iValue = GetArrayCell(hParams, 0);
-			RemoveFromArray(hParams, 0);
+			int iValue = hParams.Get(0);
+			hParams.Erase(0);
 
 			return json_integer(iValue);
 		}
@@ -1231,8 +1231,8 @@ stock Handle json_pack_element_(const char[] sFormat, int &iPos, Handle hParams)
 /**
  * Not yet implemented
  *
- * native int json_object_foreach(Handle hObj, ForEachCallback:cb);
- * native Handle json_unpack(const String:sFormat[], ...);
+ * native json_object_foreach(Handle hObj, ForEachCallback:cb);
+ * native Handle json_unpack(const char[] sFormat, ...);
  *
  */
 
@@ -1261,7 +1261,7 @@ public Extension __ext_smjansson =
 };
 
 #if !defined REQUIRE_EXTENSIONS
-public __ext_smjansson_SetNTVOptional()
+public void __ext_smjansson_SetNTVOptional()
 {
 	MarkNativeAsOptional("json_typeof");
 	MarkNativeAsOptional("json_equal");
